@@ -394,9 +394,7 @@ curl -X DELETE http://localhost:8081/registrations/1 \
 # Predefined data in the database
 There are 2 predefined users as you can see in import.sql file.
 
-Regular user 1: alice.
-Regular user 2: bob.
-All passwords are 123.
+Alice & Bob and all passwords are 123.
 
 ---
 
