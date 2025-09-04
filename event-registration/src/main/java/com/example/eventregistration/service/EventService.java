@@ -12,5 +12,5 @@ public interface EventService {
     EventResDTO getById(Long id);
     EventResDTO create(EventReqDTO eventReqDTO);
     EventResDTO update(Long id, EventReqDTO eventReqDTO);
-    String delete(Long id);
+    void delete(Long id);
 }

@@ -4,13 +4,15 @@ import com.example.eventregistration.dto.request.LoginReqDTO;
 import com.example.eventregistration.dto.request.RegisterUserReqDTO;
 import com.example.eventregistration.dto.response.LoginResDTO;
 import com.example.eventregistration.dto.response.UserResDTO;
+import com.example.eventregistration.exception.exceptions.ApiRequestException;
 import com.example.eventregistration.model.Authority;
 import com.example.eventregistration.model.User;
 import com.example.eventregistration.repository.UserRepository;
 import com.example.eventregistration.security.JwtUtil;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,7 +43,7 @@ public class MyUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
@@ -53,10 +55,16 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
     public UserResDTO registerUser(RegisterUserReqDTO registerUserReqDTO) {
+        if (userRepository.findByUsername(registerUserReqDTO.getUsername()).isPresent()) {
+            throw new ApiRequestException("Username already exists!", HttpStatus.CONFLICT);
+        }
         return registerWithRole(registerUserReqDTO, "ROLE_USER");
     }
 
     public UserResDTO registerAdmin(RegisterUserReqDTO registerUserReqDTO) {
+        if (userRepository.findByUsername(registerUserReqDTO.getUsername()).isPresent()) {
+            throw new ApiRequestException("Username already exists!", HttpStatus.CONFLICT);
+        }
         return registerWithRole(registerUserReqDTO, "ROLE_ADMIN");
     }
 
@@ -75,14 +83,18 @@ public class MyUserDetailsService implements UserDetailsService {
         return new UserResDTO(savedUser);
     }
 
-    public LoginResDTO login(@Valid LoginReqDTO loginReqDTO, AuthenticationManager authenticationManager) {
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginReqDTO.getUsername(),
-                        loginReqDTO.getPassword()
-                )
-        );
+    public LoginResDTO login(LoginReqDTO loginReqDTO, AuthenticationManager authenticationManager)
+            throws ApiRequestException {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginReqDTO.getUsername(),
+                            loginReqDTO.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            throw new ApiRequestException("Invalid Credentials!", HttpStatus.UNAUTHORIZED);
+        }
 
         User user = userRepository.findByUsername(loginReqDTO.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + loginReqDTO.getUsername()));

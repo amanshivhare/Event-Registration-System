@@ -1,12 +1,14 @@
 package com.example.eventregistration.service.impl;
 
 import com.example.eventregistration.dto.response.RegistrationResDTO;
+import com.example.eventregistration.exception.exceptions.ApiRequestException;
 import com.example.eventregistration.model.Event;
 import com.example.eventregistration.model.Registration;
 import com.example.eventregistration.model.User;
 import com.example.eventregistration.repository.RegistrationRepository;
 import com.example.eventregistration.service.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +24,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         Registration registration = new Registration();
         registration.setUser(user);
         registration.setEvent(event);
+
         return new RegistrationResDTO(registrationRepository.save(registration));
     }
 
@@ -36,19 +39,20 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     public Registration findById(Long id) {
         return registrationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registration not found"));
+                .orElseThrow(() ->
+                        new ApiRequestException("Registration not found with id " + id, HttpStatus.NOT_FOUND));
     }
 
     @Override
-    public String cancelRegistration(Long id, String username) {
+    public void cancelRegistration(Long id, String username) {
         Registration registration = registrationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registration not found"));
+                .orElseThrow(() ->
+                        new ApiRequestException("Registration not found with id " + id, HttpStatus.NOT_FOUND));
 
         if (!registration.getUser().getUsername().equals(username)) {
-            return "You can only cancel your own registrations.";
+            throw new ApiRequestException("You can only cancel your own registrations.", HttpStatus.FORBIDDEN);
         }
 
         registrationRepository.delete(registration);
-        return "Registration cancelled successfully.";
     }
 }

@@ -3,6 +3,8 @@ package com.example.eventregistration.controller;
 import com.example.eventregistration.dto.response.UserResDTO;
 import com.example.eventregistration.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,15 +18,20 @@ public class AdminController {
     private UserService userService;
 
     @GetMapping("/users")
-    public List<UserResDTO> getAllUsers() {
-        return userService.findAll()
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResDTO>> getAllUsers() {
+        List<UserResDTO> users = userService.findAll()
                 .stream()
                 .map(UserResDTO::new)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
     }
 
     @DeleteMapping("/user/{id}")
-    public void deleteUser(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
+

@@ -2,13 +2,13 @@ package com.example.eventregistration.service.impl;
 
 import com.example.eventregistration.dto.request.EventReqDTO;
 import com.example.eventregistration.dto.response.EventResDTO;
+import com.example.eventregistration.exception.exceptions.ApiRequestException;
 import com.example.eventregistration.model.Event;
 import com.example.eventregistration.repository.EventRepository;
 import com.example.eventregistration.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event findById(Long eventId) {
         return eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new ApiRequestException("Event not found with id: " + eventId, HttpStatus.NOT_FOUND));
     }
 
     @Override
@@ -36,28 +36,33 @@ public class EventServiceImpl implements EventService {
     public EventResDTO getById(Long id) {
         return eventRepository.findById(id)
                 .map(EventResDTO::new)
-                .orElseThrow(() -> new RuntimeException("Event not found with id " + id));
+                .orElseThrow(() -> new ApiRequestException("Event not found with id: " + id, HttpStatus.NOT_FOUND));
     }
 
     @Override
-    public EventResDTO create(@RequestBody EventReqDTO eventReqDTO) {
+    public EventResDTO create(EventReqDTO eventReqDTO) {
         Event event = new Event(eventReqDTO);
         return new EventResDTO(eventRepository.save(event));
     }
 
     @Override
-    public EventResDTO update(@PathVariable Long id, @RequestBody EventReqDTO eventReqDTO) {
-        Event existing = eventRepository.findById(id).orElseThrow();
+    public EventResDTO update(Long id, EventReqDTO eventReqDTO) {
+        Event existing = eventRepository.findById(id)
+                .orElseThrow(() -> new ApiRequestException("Event not found with id: " + id, HttpStatus.NOT_FOUND));
+
         existing.setName(eventReqDTO.getName());
         existing.setDate(eventReqDTO.getDate());
         existing.setLocation(eventReqDTO.getLocation());
         existing.setDescription(eventReqDTO.getDescription());
+
         return new EventResDTO(eventRepository.save(existing));
     }
 
     @Override
-    public String delete(@PathVariable Long id) {
+    public void delete(Long id) {
+        if (!eventRepository.existsById(id)) {
+            throw new ApiRequestException("Event not found with id: " + id, HttpStatus.NOT_FOUND);
+        }
         eventRepository.deleteById(id);
-        return "Event Deleted Successfully!";
     }
 }

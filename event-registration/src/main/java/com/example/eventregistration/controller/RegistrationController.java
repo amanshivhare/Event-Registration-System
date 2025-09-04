@@ -32,19 +32,24 @@ public class RegistrationController {
         String username = authentication.getName();
         User user = userService.findByUsername(username);
         Event event = eventService.findById(eventId);
-        return new ResponseEntity<>(registrationService.registerForEvent(user, event), HttpStatus.OK);
+
+        RegistrationResDTO registration = registrationService.registerForEvent(user, event);
+        return ResponseEntity.status(HttpStatus.CREATED).body(registration);
     }
 
     @GetMapping
     public ResponseEntity<List<RegistrationResDTO>> getMyRegistrations(Authentication authentication) {
         String username = authentication.getName();
         User user = userService.findByUsername(username);
-        return new ResponseEntity<>(registrationService.getMyRegistrations(user), HttpStatus.OK);
+
+        return ResponseEntity.ok(registrationService.getMyRegistrations(user));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> cancelRegistration(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<Void> cancelRegistration(@PathVariable Long id, Authentication authentication) {
         String username = authentication.getName();
-        return new ResponseEntity<>(registrationService.cancelRegistration(id, username), HttpStatus.OK);
+        registrationService.cancelRegistration(id, username);
+
+        return ResponseEntity.noContent().build();
     }
 }

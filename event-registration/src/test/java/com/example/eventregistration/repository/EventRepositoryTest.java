@@ -19,7 +19,8 @@ class EventRepositoryTest {
 
     @Test
     void shouldSaveAndFindEventById() {
-        Event event = new Event(null, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
+        List<Event> list = eventRepository.findAll();
+        Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
         Event savedEvent = eventRepository.save(event);
         Optional<Event> found = eventRepository.findById(savedEvent.getId());
         assertThat(found).isPresent();
@@ -28,8 +29,8 @@ class EventRepositoryTest {
 
     @Test
     void shouldFindAllEvents() {
-        Event e1 = new Event(null, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
-        Event e2 = new Event(null, "Conference", LocalDate.now(), "London", "Business event");
+        Event e1 = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
+        Event e2 = new Event(2L, "Conference", LocalDate.now(), "London", "Business event");
         eventRepository.save(e1);
         eventRepository.save(e2);
         List<Event> events = eventRepository.findAll();
@@ -39,7 +40,7 @@ class EventRepositoryTest {
 
     @Test
     void shouldDeleteEvent() {
-        Event event = new Event(null, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
+        Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
         Event saved = eventRepository.save(event);
         eventRepository.deleteById(saved.getId());
         Optional<Event> found = eventRepository.findById(saved.getId());

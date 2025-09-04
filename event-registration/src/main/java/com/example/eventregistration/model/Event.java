@@ -54,4 +54,11 @@ public class Event {
         this.location = eventReqDTO.getLocation();
         this.description = eventReqDTO.getDescription();
     }
+
+    public Event(String name, LocalDate date, String location, String description) {
+        this.name = name;
+        this.date = LocalDate.now();
+        this.location = location;
+        this.description = description;
+    }
 }

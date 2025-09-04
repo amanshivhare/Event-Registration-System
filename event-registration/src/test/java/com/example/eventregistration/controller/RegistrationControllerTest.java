@@ -3,6 +3,7 @@ package com.example.eventregistration.controller;
 import com.example.eventregistration.config.AppConfig;
 import com.example.eventregistration.config.SecurityConfig;
 import com.example.eventregistration.dto.response.RegistrationResDTO;
+import com.example.eventregistration.exception.exceptions.ApiRequestException;
 import com.example.eventregistration.model.Authority;
 import com.example.eventregistration.model.Event;
 import com.example.eventregistration.model.Registration;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -75,8 +77,8 @@ class RegistrationControllerTest {
 
         mockMvc.perform(post("/registrations")
                         .param("eventId", "1")
-                        .principal(() -> "test-user")) // simulates Authentication
-                .andExpect(status().isOk())
+                        .principal(() -> "test-user"))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.user.username").value("test-user"))
                 .andExpect(jsonPath("$.event.id").value(1));
     }
@@ -105,22 +107,32 @@ class RegistrationControllerTest {
     @Test
     @WithMockUser(username = "test-user", roles = "USER")
     void shouldCancelRegistration() throws Exception {
-        when(registrationServiceImpl.cancelRegistration(1L, "test-user"))
-                .thenReturn("Registration cancelled successfully.");
+        doNothing().when(registrationServiceImpl).cancelRegistration(1L, "test-user");
 
         mockMvc.perform(delete("/registrations/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Registration cancelled successfully."));
+                .andExpect(status().isNoContent())   // 204
+                .andExpect(content().string(""));    // empty body
     }
 
     @Test
     @WithMockUser(username = "test-user", roles = "USER")
     void shouldNotCancelOthersRegistration() throws Exception {
-        when(registrationServiceImpl.cancelRegistration(1L, "test-user"))
-                .thenReturn("You can only cancel your own registrations.");
+        doThrow(new ApiRequestException("You can only cancel your own registrations.", HttpStatus.FORBIDDEN))
+                .when(registrationServiceImpl).cancelRegistration(1L, "test-user");
 
         mockMvc.perform(delete("/registrations/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("You can only cancel your own registrations."));
+                .andExpect(status().isForbidden())   // 403
+                .andExpect(jsonPath("$.message").value("You can only cancel your own registrations.")); // error handled by ApiExceptionHandler
+    }
+
+    @Test
+    @WithMockUser(username = "test-user", roles = "USER")
+    void shouldReturnNotFoundWhenRegistrationDoesNotExist() throws Exception {
+        doThrow(new ApiRequestException("Registration not found with id 1", HttpStatus.NOT_FOUND))
+                .when(registrationServiceImpl).cancelRegistration(1L, "test-user");
+
+        mockMvc.perform(delete("/registrations/1"))
+                .andExpect(status().isNotFound())   // 404
+                .andExpect(jsonPath("$.message").value("Registration not found with id 1"));
     }
 }

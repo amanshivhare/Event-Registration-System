@@ -11,5 +11,5 @@ public interface RegistrationService {
     RegistrationResDTO registerForEvent(User user, Event event);
     List<RegistrationResDTO> getMyRegistrations(User user);
     Registration findById(Long id);
-    String cancelRegistration(Long id, String username);
+    void cancelRegistration(Long id, String username);
 }

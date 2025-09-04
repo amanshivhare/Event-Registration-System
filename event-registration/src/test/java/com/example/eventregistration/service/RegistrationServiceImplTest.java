@@ -1,6 +1,7 @@
 package com.example.eventregistration.service;
 
 import com.example.eventregistration.dto.response.RegistrationResDTO;
+import com.example.eventregistration.exception.exceptions.ApiRequestException;
 import com.example.eventregistration.model.Authority;
 import com.example.eventregistration.model.Event;
 import com.example.eventregistration.model.Registration;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -85,7 +87,7 @@ class RegistrationServiceImplTest {
     void testFindByIdNotFound() {
         when(registrationRepository.findById(2L)).thenReturn(Optional.empty());
         RuntimeException exception = assertThrows(RuntimeException.class, () -> registrationServiceImpl.findById(2L));
-        assertEquals("Registration not found", exception.getMessage());
+        assertEquals("Registration not found with id 2", exception.getMessage());
         verify(registrationRepository, times(1)).findById(2L);
     }
 
@@ -96,9 +98,32 @@ class RegistrationServiceImplTest {
         Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
         Registration registration = new Registration(1L, event, user, LocalDateTime.now());
         when(registrationRepository.findById(1L)).thenReturn(Optional.of(registration));
-        String result = registrationServiceImpl.cancelRegistration(1L, "test-user");
-        assertEquals("Registration cancelled successfully.", result);
+        registrationServiceImpl.cancelRegistration(1L, "test-user");
         verify(registrationRepository, times(1)).delete(registration);
+    }
+
+    @Test
+    void testCancelRegistration_NotFound() {
+        when(registrationRepository.findById(1L)).thenReturn(Optional.empty());
+        ApiRequestException ex = assertThrows(ApiRequestException.class,
+                () -> registrationServiceImpl.cancelRegistration(1L, "test-user"));
+        assertEquals("Registration not found with id 1", ex.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        verify(registrationRepository, never()).delete(any());
+    }
+
+    @Test
+    void testCancelRegistration_Unauthorized() {
+        Set<Authority> authorities = Set.of(new Authority(1L, "ROLE_USER", null));
+        User owner = new User(1L, "other-user", "password", true, authorities);
+        Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
+        Registration registration = new Registration(1L, event, owner, LocalDateTime.now());
+        when(registrationRepository.findById(1L)).thenReturn(Optional.of(registration));
+        ApiRequestException ex = assertThrows(ApiRequestException.class,
+                () -> registrationServiceImpl.cancelRegistration(1L, "test-user"));
+        assertEquals("You can only cancel your own registrations.", ex.getMessage());
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
+        verify(registrationRepository, never()).delete(any());
     }
 
 }

@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -95,7 +96,7 @@ class EventControllerTest {
         mockMvc.perform(post("/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Hackathon\",\"date\":\"2025-09-04\",\"location\":\"Berlin\",\"description\":\"Tech event\"}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Hackathon"))
                 .andExpect(jsonPath("$.location").value("Berlin"))
                 .andExpect(jsonPath("$.description").value("Tech event"));
@@ -125,10 +126,11 @@ class EventControllerTest {
 
     @Test
     void shouldDeleteEvent() throws Exception {
-        when(eventServiceImpl.delete(1L)).thenReturn("Deleted");
+        // since delete() is void now, just doNothing
+        doNothing().when(eventServiceImpl).delete(1L);
 
         mockMvc.perform(delete("/events/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Deleted"));
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
     }
 }

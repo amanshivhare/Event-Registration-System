@@ -2,6 +2,7 @@ package com.example.eventregistration.service;
 
 import com.example.eventregistration.dto.request.EventReqDTO;
 import com.example.eventregistration.dto.response.EventResDTO;
+import com.example.eventregistration.exception.exceptions.ApiRequestException;
 import com.example.eventregistration.model.Event;
 import com.example.eventregistration.repository.EventRepository;
 import com.example.eventregistration.service.impl.EventServiceImpl;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -103,9 +105,21 @@ class EventServiceImplTest {
 
     @Test
     void shouldDeleteEvent() {
+        when(eventRepository.existsById(1L)).thenReturn(true);
         doNothing().when(eventRepository).deleteById(1L);
-        String result = eventServiceImpl.delete(1L);
-        assertEquals("Event Deleted Successfully!", result);
+        eventServiceImpl.delete(1L);
         verify(eventRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEventNotFoundOnDelete() {
+        when(eventRepository.existsById(1L)).thenReturn(false);
+        ApiRequestException ex = assertThrows(
+                ApiRequestException.class,
+                () -> eventServiceImpl.delete(1L)
+        );
+        assertEquals("Event not found with id: 1", ex.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        verify(eventRepository, never()).deleteById(anyLong());
     }
 }
