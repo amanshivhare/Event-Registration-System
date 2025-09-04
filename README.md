@@ -571,9 +571,9 @@ curl -X DELETE http://localhost:8081/registrations/1 \
 
 # Predefined data in the database
 In the database, there are two types of users: ROLE_ADMIN and ROLE_USER.
-Also, there are 2 predefined users as you can see in import.sql file.
+Also, there are 3 predefined users as you can see in import.sql file.
 
-Regular user is Alice.
+Regular user is Alice & Bob.
 
 Admin is Admin.
 
