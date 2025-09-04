@@ -117,18 +117,66 @@ Expected response:
 * Ensure **ports are free** (default 8081). Change `server.port` in `application.properties` if needed.
 * If changed then make sure to update that new port to every curl command/request that you hit.
 * All APIs are **secured using JWT**, except authentication endpoints (`/auth/register`, `/auth/login`).
-* Use **Postman or Swagger** for testing APIs.
-
 ##
 
-# User Registration, Authentication, and Accessing Secured APIs
+# Admin and User Registration, Authentication, and Accessing Secured APIs
 
-The Event Registration System uses JWT-based authentication. Below is the step-by-step guide:
+The Event Registration System uses JWT-based authentication. Below is the step-by-step guide for both **admins** and **users**.
 
-## 1. User Registration
+---
+
+## 1. Admin Registration
+
+**Endpoint:** `POST /auth/register-admin`
+**Description:** Create a new admin account. Admin accounts have `ROLE_ADMIN` and can access admin-only endpoints.
+
+**Request Body Example:**
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+**Response Example:**
+
+```json
+"Admin user registered successfully"
+```
+
+> Note: Admin accounts are created with `ROLE_ADMIN`. No JWT token is required to register an admin, but you must have access to this endpoint securely (e.g., initial setup).
+
+---
+
+## 2. Admin Authentication (Login)
+
+**Endpoint:** `POST /auth/login`
+**Description:** Authenticate an admin and obtain a JWT token for accessing secured APIs.
+
+**Request Body Example:**
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+**Response Example:**
+
+```json
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+> Save this token — it is required to access admin-only APIs under `/admin/**`.
+
+---
+
+## 3. User Registration
 
 **Endpoint:** `POST /auth/register`
-**Description:** Create a new user account.
+**Description:** Create a new regular user account.
 
 **Request Body Example:**
 
@@ -149,7 +197,7 @@ The Event Registration System uses JWT-based authentication. Below is the step-b
 
 ---
 
-## 2. User Authentication (Login)
+## 4. User Authentication (Login)
 
 **Endpoint:** `POST /auth/login`
 **Description:** Authenticate a registered user and obtain a JWT token.
@@ -169,11 +217,11 @@ The Event Registration System uses JWT-based authentication. Below is the step-b
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-> Save this token, it is required to access secured APIs.
+> Save this token — it is required to access secured APIs under `/events` and `/registrations`.
 
 ---
 
-## 3. Accessing Secured APIs
+## 5. Accessing Secured APIs
 
 All endpoints under `/events` and `/registrations` require a valid JWT in the **Authorization header**:
 
@@ -200,46 +248,115 @@ Authorization: Bearer <JWT_TOKEN>
 ]
 ```
 
-## 4. Notes
+#### b) Admin-Only: Get All Users
 
-* Always include the JWT token in `Authorization` header for secured APIs.
-* Event creation (`POST /events`) and updates are restricted to users with administrative privileges if implemented.
-* You can use tools like **Postman** or **Swagger UI** to explore all endpoints.
+**Endpoint:** `GET /admin/users`
+**Description:** Accessible only to admins. Returns a list of all registered users.
 
-##
+**Header Example:**
+
+```
+Authorization: Bearer <ADMIN_JWT_TOKEN>
+```
+
+**Response Example:**
+
+```json
+[
+  {
+    "id": 1,
+    "username": "user",
+    "roles": ["ROLE_USER"]
+  },
+  {
+    "id": 2,
+    "username": "admin",
+    "roles": ["ROLE_ADMIN"]
+  }
+]
+```
+
+---
+
+## 6. Notes
+
+* Always include the JWT token in the `Authorization` header for secured APIs.
+* Admin endpoints (`/admin/**`) are accessible only by `ROLE_ADMIN`.
+* Event creation (`POST /events`) and updates may be restricted to users with administrative privileges depending on implementation.
+* Use tools like **Postman** or **Swagger UI** to explore all endpoints.
+
+---
 
 Base URL: `http://localhost:8081`
 
 ---
 
-# API Endpoints & cURL Commands
+# API Endpoints & Curl Commands
 
 All APIs use JSON. Secured APIs require JWT in **Authorization header**.
 
 ---
 
-## 1. User Registration
+## 1. Admin Registration
+
+**Endpoint:** `POST /auth/register-admin`
+
+```bash
+curl -X POST http://localhost:8081/auth/register-admin \
+-H "Content-Type: application/json" \
+-d '{"username":"admin","password":"123"}'
+```
+
+**Response:** Admin Payload, e.g.:
+
+```
+{
+    "id": 1,
+    "username": "Admin",
+    "enabled": true,
+    "authorities": [
+        "ROLE_ADMIN"
+    ]
+}
+```
+
+---
+
+## 2. User Registration
 
 **Endpoint:** `POST /auth/register`
 
 ```bash
 curl -X POST http://localhost:8081/auth/register \
 -H "Content-Type: application/json" \
--d '{"username":"user","password":"password123"}'
+-d '{"username":"Alice","password":"123"}'
 ```
 
-**Response:** `"User registered successfully"`
+**Response:** User Payload, e.g.:
+
+```
+{
+    "id": 2,
+    "username": "Alice",
+    "enabled": true,
+    "authorities": [
+        "ROLE_USER"
+    ]
+}
+```
 
 ---
 
-## 2. User Login
+## 3. Admin/User Login
+
+Same process for both kind of users. (ADMIN & USER)
 
 **Endpoint:** `POST /auth/login`
 
 ```bash
 curl -X POST http://localhost:8081/auth/login \
 -H "Content-Type: application/json" \
--d '{"username":"user","password":"password123"}'
+-d '{"username":"admin","password":"123"}'
 ```
 
 **Response:** JWT Token string, e.g.:
@@ -252,7 +369,68 @@ curl -X POST http://localhost:8081/auth/login \
 
 ---
 
-## 3. Get All Events
+## 4. Get All Users (Admin Only)
+
+**Endpoint:** `GET /admin/users`
+**JWT Secured**
+
+```bash
+curl -X GET http://localhost:8081/admin/users \
+-H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+**Response Example:**
+
+```json
+[
+  {
+    "id": 1,
+    "username": "Admin",
+    "enabled": true,
+    "authorities": [
+      "ROLE_ADMIN"
+    ]
+  },
+  {
+    "id": 2,
+    "username": "Alice",
+    "enabled": true,
+    "authorities": [
+      "ROLE_USER"
+    ]
+  },
+  {
+    "id": 3,
+    "username": "Bob",
+    "enabled": true,
+    "authorities": [
+      "ROLE_USER"
+    ]
+  }
+]
+```
+
+---
+
+## 5. Delete User by ID (Admin Only)
+
+**Endpoint:** `DELETE /admin/user/{id}`
+**JWT Secured**
+
+```bash
+curl -X GET http://localhost:8081/admin/user/{id} \
+-H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+**Response Example:**
+
+```
+HTTP 200 OK if deleted successfully.
+```
+
+---
+
+## 6. Get All Events
 
 **Endpoint:** `GET /events`
 **JWT Secured**
@@ -272,7 +450,7 @@ curl -X GET http://localhost:8081/events \
 
 ---
 
-## 4. Get Event by ID
+## 7. Get Event by ID
 
 **Endpoint:** `GET /events/{id}`
 
@@ -289,7 +467,7 @@ curl -X GET http://localhost:8081/events/1 \
 
 ---
 
-## 5. Create Event
+## 8. Create Event
 
 **Endpoint:** `POST /events` (Admin only if implemented)
 
@@ -308,7 +486,7 @@ curl -X POST http://localhost:8081/events \
 
 ---
 
-## 6. Update Event
+## 9. Update Event
 
 **Endpoint:** `PUT /events/{id}`
 
@@ -327,7 +505,7 @@ curl -X PUT http://localhost:8081/events/2 \
 
 ---
 
-## 7. Delete Event
+## 10. Delete Event
 
 **Endpoint:** `DELETE /events/{id}`
 
@@ -340,7 +518,7 @@ curl -X DELETE http://localhost:8081/events/2 \
 
 ---
 
-## 8. Register for Event
+## 11. Register for Event
 
 **Endpoint:** `POST /registrations?eventId={id}`
 
@@ -357,7 +535,7 @@ curl -X POST "http://localhost:8081/registrations?eventId=1" \
 
 ---
 
-## 9. Get My Registrations
+## 12. Get My Registrations
 
 **Endpoint:** `GET /registrations`
 
@@ -376,7 +554,7 @@ curl -X GET http://localhost:8081/registrations \
 
 ---
 
-## 10. Cancel Registration
+## 13. Cancel Registration
 
 **Endpoint:** `DELETE /registrations/{id}`
 
@@ -392,9 +570,14 @@ curl -X DELETE http://localhost:8081/registrations/1 \
 ---
 
 # Predefined data in the database
-There are 2 predefined users as you can see in import.sql file.
+In the database, there are two types of users: ROLE_ADMIN and ROLE_USER.
+Also, there are 2 predefined users as you can see in import.sql file.
 
-Alice & Bob and all passwords are 123.
+Regular user is Alice.
+
+Admin is Admin.
+
+All passwords are 123.
 
 ---
 
@@ -405,7 +588,7 @@ This Event Registration System provides a fully functional backend for managing 
 By following the steps and using the provided cURL commands, you can:
 
 - Set up and run the application locally.
-- Register users and obtain JWT tokens.
+- Register admin and users and obtain JWT tokens.
 - Create, view, update, and delete events.
 - Register for events, view your registrations, and cancel them if needed.
 

@@ -4,7 +4,6 @@ import com.example.eventregistration.dto.request.LoginReqDTO;
 import com.example.eventregistration.dto.request.RegisterUserReqDTO;
 import com.example.eventregistration.dto.response.LoginResDTO;
 import com.example.eventregistration.dto.response.UserResDTO;
-import com.example.eventregistration.repository.UserRepository;
 import com.example.eventregistration.service.impl.MyUserDetailsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
@@ -29,6 +25,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserResDTO> register(@RequestBody @Valid RegisterUserReqDTO registerUserReqDTO) {
         return new ResponseEntity<>(myUserDetailsService.registerUser(registerUserReqDTO), HttpStatus.OK);
+    }
+
+    @PostMapping("/register-admin")
+    public ResponseEntity<UserResDTO> registerAdmin(@RequestBody @Valid RegisterUserReqDTO registerUserReqDTO) {
+        return new ResponseEntity<>(myUserDetailsService.registerAdmin(registerUserReqDTO), HttpStatus.OK);
     }
 
     @PostMapping("/login")

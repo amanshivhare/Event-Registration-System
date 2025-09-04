@@ -53,12 +53,20 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
     public UserResDTO registerUser(RegisterUserReqDTO registerUserReqDTO) {
+        return registerWithRole(registerUserReqDTO, "ROLE_USER");
+    }
+
+    public UserResDTO registerAdmin(RegisterUserReqDTO registerUserReqDTO) {
+        return registerWithRole(registerUserReqDTO, "ROLE_ADMIN");
+    }
+
+    private UserResDTO registerWithRole(RegisterUserReqDTO registerUserReqDTO, String roleName) {
         registerUserReqDTO.setPassword(passwordEncoder.encode(registerUserReqDTO.getPassword()));
 
         User user = new User(registerUserReqDTO);
 
         Authority role = new Authority();
-        role.setAuthority("ROLE_USER");
+        role.setAuthority(roleName);
         role.setUser(user);
 
         user.setAuthorities(Set.of(role));
