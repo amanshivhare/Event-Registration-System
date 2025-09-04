@@ -1,5 +1,3 @@
-Got it! Here’s the full **README.md** content so far in a **single markdown block**, ready to copy-paste:
-
 # Event-Registration-System
 Event Registration System for organizing and managing events.
 
@@ -117,6 +115,7 @@ Expected response:
 ## 7. Additional Notes
 
 * Ensure **ports are free** (default 8081). Change `server.port` in `application.properties` if needed.
+* If changed then make sure to update that new port to every curl command/request that you hit.
 * All APIs are **secured using JWT**, except authentication endpoints (`/auth/register`, `/auth/login`).
 * Use **Postman or Swagger** for testing APIs.
 
