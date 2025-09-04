@@ -12,3 +12,8 @@ INSERT INTO public.events VALUES ('2025-09-15', 2, 'Kafka basics.', 'Bangalore',
 INSERT INTO public.registrations VALUES (1, 1, '2025-09-04 21:52:30.911563', 1);
 INSERT INTO public.registrations VALUES (2, 2, '2025-09-04 21:53:43.191434', 2);
 
+-- reset sequences so Spring Boot’s JPA won’t try to reuse old IDs
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+SELECT setval('authorities_id_seq', (SELECT MAX(id) FROM authorities));
+SELECT setval('events_id_seq', (SELECT MAX(id) FROM events));
+SELECT setval('registrations_id_seq', (SELECT MAX(id) FROM registrations));
