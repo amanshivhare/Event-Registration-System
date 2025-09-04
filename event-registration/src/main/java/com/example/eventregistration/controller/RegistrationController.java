@@ -1,10 +1,8 @@
 package com.example.eventregistration.controller;
 
-import com.example.eventregistration.entity.Event;
-import com.example.eventregistration.entity.Registration;
-import com.example.eventregistration.entity.User;
-import com.example.eventregistration.repository.EventRepository;
-import com.example.eventregistration.repository.UserRepository;
+import com.example.eventregistration.dto.response.RegistrationResDTO;
+import com.example.eventregistration.model.Event;
+import com.example.eventregistration.model.User;
 import com.example.eventregistration.service.EventService;
 import com.example.eventregistration.service.RegistrationService;
 import com.example.eventregistration.service.UserService;
@@ -30,34 +28,23 @@ public class RegistrationController {
     private EventService eventService;
 
     @PostMapping
-    public ResponseEntity<Registration> registerForEvent(@RequestParam Long eventId, Authentication authentication) {
+    public ResponseEntity<RegistrationResDTO> registerForEvent(@RequestParam Long eventId, Authentication authentication) {
         String username = authentication.getName();
-
         User user = userService.findByUsername(username);
-
         Event event = eventService.findById(eventId);
-
-        return registrationService.registerForEvent(user, event);
+        return new ResponseEntity<>(registrationService.registerForEvent(user, event), HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity<List<Registration>> getMyRegistrations(Authentication authentication) {
+    public ResponseEntity<List<RegistrationResDTO>> getMyRegistrations(Authentication authentication) {
         String username = authentication.getName();
-
         User user = userService.findByUsername(username);
-        return registrationService.getMyRegistrations(user);
+        return new ResponseEntity<>(registrationService.getMyRegistrations(user), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> cancelRegistration(@PathVariable Long id, Authentication authentication) {
         String username = authentication.getName();
-
-        Registration registration = registrationService.findById(id);
-
-        if (!registration.getUser().getUsername().equals(username)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only cancel your own registrations");
-        }
-
-        return registrationService.cancelRegistration(registration);
+        return new ResponseEntity<>(registrationService.cancelRegistration(id, username), HttpStatus.OK);
     }
 }

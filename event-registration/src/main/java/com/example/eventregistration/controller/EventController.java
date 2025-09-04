@@ -1,8 +1,11 @@
 package com.example.eventregistration.controller;
 
-import com.example.eventregistration.entity.Event;
+import com.example.eventregistration.dto.request.EventReqDTO;
+import com.example.eventregistration.dto.response.EventResDTO;
 import com.example.eventregistration.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,27 +18,27 @@ public class EventController {
     private EventService eventService;
 
     @GetMapping
-    public List<Event> getAll() {
-        return eventService.getAll();
+    public ResponseEntity<List<EventResDTO>> getAll() {
+        return new ResponseEntity<>(eventService.getAll(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public Event getById(@PathVariable Long id) {
-        return eventService.getById(id);
+    public ResponseEntity<EventResDTO> getById(@PathVariable Long id) {
+        return new ResponseEntity<>(eventService.getById(id), HttpStatus.OK);
     }
 
     @PostMapping
-    public Event create(@RequestBody Event event) {
-        return eventService.create(event);
+    public ResponseEntity<EventResDTO> create(@RequestBody EventReqDTO eventReqDTO) {
+        return new ResponseEntity<>(eventService.create(eventReqDTO), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public Event update(@PathVariable Long id, @RequestBody Event event) {
-        return eventService.update(id, event);
+    public ResponseEntity<EventResDTO> update(@PathVariable Long id, @RequestBody EventReqDTO eventReqDTO) {
+        return new ResponseEntity<>(eventService.update(id, eventReqDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id) {
-        return eventService.delete(id);
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        return new ResponseEntity<>(eventService.delete(id), HttpStatus.OK);
     }
 }

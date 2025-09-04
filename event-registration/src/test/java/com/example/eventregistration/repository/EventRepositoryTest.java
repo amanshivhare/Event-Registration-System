@@ -1,6 +1,6 @@
 package com.example.eventregistration.repository;
 
-import com.example.eventregistration.entity.Event;
+import com.example.eventregistration.model.Event;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -21,9 +21,7 @@ class EventRepositoryTest {
     void shouldSaveAndFindEventById() {
         Event event = new Event(null, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
         Event savedEvent = eventRepository.save(event);
-
         Optional<Event> found = eventRepository.findById(savedEvent.getId());
-
         assertThat(found).isPresent();
         assertThat(found.get().getName()).isEqualTo("Hackathon");
     }
@@ -32,12 +30,9 @@ class EventRepositoryTest {
     void shouldFindAllEvents() {
         Event e1 = new Event(null, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
         Event e2 = new Event(null, "Conference", LocalDate.now(), "London", "Business event");
-
         eventRepository.save(e1);
         eventRepository.save(e2);
-
         List<Event> events = eventRepository.findAll();
-
         assertThat(events).hasSize(2);
         assertThat(events.get(0).getName()).isIn("Hackathon", "Conference");
     }
@@ -46,9 +41,7 @@ class EventRepositoryTest {
     void shouldDeleteEvent() {
         Event event = new Event(null, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
         Event saved = eventRepository.save(event);
-
         eventRepository.deleteById(saved.getId());
-
         Optional<Event> found = eventRepository.findById(saved.getId());
         assertThat(found).isNotPresent();
     }

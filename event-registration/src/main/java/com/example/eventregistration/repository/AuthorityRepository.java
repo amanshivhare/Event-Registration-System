@@ -1,6 +1,6 @@
 package com.example.eventregistration.repository;
 
-import com.example.eventregistration.entity.Authority;
+import com.example.eventregistration.model.Authority;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

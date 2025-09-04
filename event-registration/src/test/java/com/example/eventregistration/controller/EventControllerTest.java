@@ -2,17 +2,17 @@ package com.example.eventregistration.controller;
 
 import com.example.eventregistration.config.AppConfig;
 import com.example.eventregistration.config.SecurityConfig;
-import com.example.eventregistration.entity.Event;
+import com.example.eventregistration.dto.request.EventReqDTO;
+import com.example.eventregistration.dto.response.EventResDTO;
 import com.example.eventregistration.security.JwtUtil;
-import com.example.eventregistration.security.MyUserDetailsService;
-import com.example.eventregistration.service.EventService;
+import com.example.eventregistration.service.impl.MyUserDetailsService;
+import com.example.eventregistration.service.impl.EventServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,12 +39,20 @@ class EventControllerTest {
     private MyUserDetailsService myUserDetailsService;
 
     @MockitoBean
-    private EventService eventService;
+    private EventServiceImpl eventServiceImpl;
 
     @Test
     void shouldReturnAllEvents() throws Exception {
-        Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
-        when(eventService.getAll()).thenReturn(Arrays.asList(event));
+        EventResDTO eventResDTO = new EventResDTO(
+                1L,
+                "Hackathon",
+                LocalDate.now(),
+                "Berlin",
+                "Tech event",
+                null
+        );
+
+        when(eventServiceImpl.getAll()).thenReturn(Arrays.asList(eventResDTO));
 
         mockMvc.perform(get("/events"))
                 .andExpect(status().isOk())
@@ -53,41 +61,71 @@ class EventControllerTest {
 
     @Test
     void shouldReturnEventById() throws Exception {
-        Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
-        when(eventService.getById(1L)).thenReturn(event);
+        EventResDTO eventResDTO = new EventResDTO(
+                1L,
+                "Hackathon",
+                LocalDate.now(),
+                "Berlin",
+                "Tech event",
+                null
+        );
+
+        when(eventServiceImpl.getById(1L)).thenReturn(eventResDTO);
 
         mockMvc.perform(get("/events/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Hackathon"));
+                .andExpect(jsonPath("$.name").value("Hackathon"))
+                .andExpect(jsonPath("$.location").value("Berlin"))
+                .andExpect(jsonPath("$.description").value("Tech event"));
     }
 
     @Test
     void shouldCreateEvent() throws Exception {
-        Event event = new Event(1L, "Hackathon", LocalDate.now(), "Berlin", "Tech event");
-        when(eventService.create(any(Event.class))).thenReturn(event);
+        EventResDTO eventResDTO = new EventResDTO(
+                1L,
+                "Hackathon",
+                LocalDate.of(2025, 9, 4),
+                "Berlin",
+                "Tech event",
+                null
+        );
+
+        when(eventServiceImpl.create(any(EventReqDTO.class))).thenReturn(eventResDTO);
 
         mockMvc.perform(post("/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Hackathon\",\"date\":\"2025-09-04\",\"location\":\"Berlin\",\"description\":\"Tech event\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Hackathon"));
+                .andExpect(jsonPath("$.name").value("Hackathon"))
+                .andExpect(jsonPath("$.location").value("Berlin"))
+                .andExpect(jsonPath("$.description").value("Tech event"));
     }
 
     @Test
     void shouldUpdateEvent() throws Exception {
-        Event updatedEvent = new Event(1L, "Hackathon 2.0", LocalDate.now(), "Berlin", "Updated");
-        when(eventService.update(any(Long.class), any(Event.class))).thenReturn(updatedEvent);
+        EventResDTO updatedEventResDTO = new EventResDTO(
+                1L,
+                "Hackathon 2.0",
+                LocalDate.of(2025, 9, 4),
+                "Berlin",
+                "Updated",
+                null
+        );
+
+        when(eventServiceImpl.update(any(Long.class), any(EventReqDTO.class))).thenReturn(updatedEventResDTO);
 
         mockMvc.perform(put("/events/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Hackathon 2.0\",\"date\":\"2025-09-04\",\"location\":\"Berlin\",\"description\":\"Updated\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Hackathon 2.0"));
+                .andExpect(jsonPath("$.name").value("Hackathon 2.0"))
+                .andExpect(jsonPath("$.location").value("Berlin"))
+                .andExpect(jsonPath("$.description").value("Updated"));
     }
 
     @Test
     void shouldDeleteEvent() throws Exception {
-        when(eventService.delete(1L)).thenReturn("Deleted");
+        when(eventServiceImpl.delete(1L)).thenReturn("Deleted");
 
         mockMvc.perform(delete("/events/1"))
                 .andExpect(status().isOk())
